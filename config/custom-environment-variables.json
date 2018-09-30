@@ -1,3 +1,4 @@
 {
-  "jwtPrivateKey": "brg_jwtPrivateKey"
+  "jwtPrivateKey": "brg_jwtPrivateKey",
+  "db": "brg_db"
 }
