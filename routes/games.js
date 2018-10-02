@@ -72,6 +72,28 @@ router.put(
   }
 );
 
+// Comment on a game
+router.put("/comment/:id", [auth, validateObjectId], async (req, res) => {
+  const { error } = validateGame(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  Game.findById(req.params.id, (err, game) => {
+    const comment = { name: req.user.name, text: req.body };
+    if (req.body !== undefined) {
+      game.comments.push(comment);
+    }
+    game.save((e, updatedGame) => {
+      if (err) {
+        res.status(400).send(e);
+      } else {
+        res.send(updatedGame);
+      }
+    });
+  });
+});
+
 // Like a game
 router.put("/like/:id", [auth, validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
@@ -153,6 +175,29 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
   }
 
   res.send(game);
+});
+
+// Remove comment from game
+router.delete("/comment/:id", [auth, validateObjectId], async (req, res) => {
+  const { error } = validateGame(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  Game.findById(req.params.id, (err, game) => {
+    const comment = { name: req.user.name, text: req.body };
+    const index = game.comments.indexOf(comment);
+    if (req.body !== undefined) {
+      game.comments.splice(index, 1);
+    }
+    game.save((e, updatedGame) => {
+      if (err) {
+        res.status(400).send(e);
+      } else {
+        res.send(updatedGame);
+      }
+    });
+  });
 });
 
 function likeGame(game, user) {

@@ -137,6 +137,19 @@ describe("/api/games", () => {
       }, 3000);
     });
 
+    it("should add a comment to the game if it is valid", async () => {
+      const res = await exec("comment", {
+        name: "user1",
+        text: "very good game"
+      });
+
+      // Wait for put to complete.
+      setTimeout(() => {
+        expect(res.body.comments.name).toBe("user1");
+        expect(res.body.comments.text).toBe("very good game");
+      }, 3000);
+    });
+
     // it("should return a 400 status error if request params are not valid", async () => {
     //   const res = await exec({ name: "a", released: "true" });
 
@@ -210,14 +223,38 @@ describe("/api/games", () => {
       addedGame = new Game(gameData[0]);
       await addedGame.save();
     });
+
     it("should remove the game from the database", async () => {
       await request(server)
-        .delete("/api/games" + addedGame._id)
+        .delete("/api/games/" + addedGame._id)
         .set("x-auth-token", token);
 
       setTimeout(async () => {
         game = await Game.find({ name: gameData[0].name });
         expect(game).toBeNull();
+      }, 3000);
+    });
+
+    it("should remove a comment from a game", async () => {
+      // Add comment to game
+      let comment = { name: "user1", text: "very good game" };
+
+      await request(server)
+        .put("/api/games/comment" + addedGame._id)
+        .set("x-auth-token", token)
+        .send(comment);
+
+      // Remove comment
+      setTimeout(async () => {
+        await request(server)
+          .delete("/api/games/comment/" + addedGame._id)
+          .set("x-auth-token", token);
+      }, 3000);
+
+      setTimeout(async () => {
+        game = await Game.find({ name: gameData[0].name });
+        expect(game).toBeNull();
+        expect(game.comments).not.toContain(comment);
       }, 3000);
     });
 

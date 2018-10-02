@@ -114,7 +114,21 @@ const gameSchema = new mongoose.Schema({
   image: {
     data: Buffer,
     contentType: String
-  }
+  },
+  comments: [
+    {
+      name: {
+        type: String,
+        min: 3,
+        max: 50
+      },
+      text: {
+        type: String,
+        min: 5,
+        max: 140
+      }
+    }
+  ]
 });
 
 const Game = mongoose.model("Game", gameSchema);
