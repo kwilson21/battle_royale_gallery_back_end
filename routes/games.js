@@ -3,7 +3,7 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const cache = require("../middleware/cache");
 const validateObjectId = require("../middleware/validateObjectId");
-const cors = require('../middleware/cors')
+
 // Models
 const { Game, validateGame } = require("../models/game");
 // Libraries
@@ -14,7 +14,7 @@ const upload = multer();
 const _ = require("lodash");
 
 // Create a game
-router.post("/", [cors,auth, admin, upload.single("image")], async (req, res) => {
+router.post("/", [auth, admin, upload.single("image")], async (req, res) => {
   if (req.body.released) {
     req.body.released = Boolean(Number(req.body.released));
   }
@@ -41,13 +41,13 @@ router.post("/", [cors,auth, admin, upload.single("image")], async (req, res) =>
 });
 
 // Read all games
-router.get("/", [cors,cache(30)], async (req, res) => {
+router.get("/", [cache(30)], async (req, res) => {
   const games = await Game.find();
   res.send(games);
 });
 
 // Read single game
-router.get("/:id", [cors,validateObjectId, cache(30)], async (req, res) => {
+router.get("/:id", [validateObjectId, cache(30)], async (req, res) => {
   const game = await Game.findById(req.params.id);
   if (!game) {
     return res.status(404).send("Game not found.");
@@ -58,7 +58,7 @@ router.get("/:id", [cors,validateObjectId, cache(30)], async (req, res) => {
 // Update a game
 router.put(
   "/:id",
-  [cors, auth, admin, validateObjectId, upload.single("image")],
+  [ auth, admin, validateObjectId, upload.single("image")],
   async (req, res) => {
     if (req.body.released) {
       req.body.released = Boolean(Number(req.body.released));
@@ -92,7 +92,7 @@ router.put(
 );
 
 // Comment on a game
-router.put("/comment/:id", [cors, validateObjectId], async (req, res) => {
+router.put("/comment/:id", [ validateObjectId], async (req, res) => {
   // const { error } = validateGame(req.body);
   // if (error) {
   //   return res.status(400).send(error.details[0].message);
@@ -115,7 +115,7 @@ router.put("/comment/:id", [cors, validateObjectId], async (req, res) => {
 });
 
 // Like a game
-router.put("/like/:id", [cors, auth, validateObjectId], async (req, res) => {
+router.put("/like/:id", [ auth, validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     game = likeGame(game, req.user);
     if (game) {
@@ -133,7 +133,7 @@ router.put("/like/:id", [cors, auth, validateObjectId], async (req, res) => {
 });
 
 // Unlike a game
-router.put("/unlike/:id", [cors, auth, validateObjectId], async (req, res) => {
+router.put("/unlike/:id", [ auth, validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     game = unlikeGame(game, req.user);
     if (game) {
@@ -151,7 +151,7 @@ router.put("/unlike/:id", [cors, auth, validateObjectId], async (req, res) => {
 });
 
 // Dislike a game
-router.put("/dislike/:id", [cors, auth, validateObjectId], async (req, res) => {
+router.put("/dislike/:id", [ auth, validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     game = dislikeGame(game, req.user);
     if (game) {
@@ -169,7 +169,7 @@ router.put("/dislike/:id", [cors, auth, validateObjectId], async (req, res) => {
 });
 
 // Undislike a game
-router.put("/undislike/:id", [cors, auth, validateObjectId], async (req, res) => {
+router.put("/undislike/:id", [ auth, validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     game = undislikeGame(game, req.user);
     if (game) {
@@ -187,7 +187,7 @@ router.put("/undislike/:id", [cors, auth, validateObjectId], async (req, res) =>
 });
 
 // Delete
-router.delete("/:id", [cors, auth, admin, validateObjectId], async (req, res) => {
+router.delete("/:id", [ auth, admin, validateObjectId], async (req, res) => {
   const game = await Game.findByIdAndRemove(req.params.id);
 
   if (!game) {
@@ -198,7 +198,7 @@ router.delete("/:id", [cors, auth, admin, validateObjectId], async (req, res) =>
 });
 
 // Remove comment from game
-router.delete("/comment/:id", [cors, validateObjectId], async (req, res) => {
+router.delete("/comment/:id", [ validateObjectId], async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
     const comment = { name: req.body.name, text: req.body.text };
     const index = game.comments.indexOf(comment);
