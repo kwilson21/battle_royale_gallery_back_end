@@ -11,7 +11,7 @@ const games = require("../routes/games");
 const users = require("../routes/users");
 const auth = require("../routes/auth");
 
-module.exports = function(app) {
+
   app.use(function(req, res, next) {
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -25,7 +25,7 @@ module.exports = function(app) {
     // Request headers you wish to allow
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "X-Requested-With,content-type"
+      "*"
     );
 
     // Set to true if you need the website to include cookies in the requests sent
