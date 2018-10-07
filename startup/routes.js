@@ -11,7 +11,7 @@ const games = require("../routes/games");
 const users = require("../routes/users");
 const auth = require("../routes/auth");
 
-
+module.exports = function(app) {
   app.use(function(req, res, next) {
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");
