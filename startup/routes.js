@@ -25,7 +25,7 @@ const auth = require("../routes/auth");
     // Request headers you wish to allow
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "X-Requested-With,content-type,x-auth-token"
+      "X-Requested-With,content-type"
     );
 
     // Set to true if you need the website to include cookies in the requests sent
