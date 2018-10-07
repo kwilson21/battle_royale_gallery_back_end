@@ -160,14 +160,14 @@ describe("/api/games", () => {
       const res = await exec("like/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.likecount).toBe(1);
+      expect(res.body.likecount).toBe(1);
     });
 
     it("should return 400 if user already liked the game", async () => {
       let res = await exec("like/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.likecount).toBe(1);
+      expect(res.body.likecount).toBe(1);
 
       res = await exec("like/");
 
@@ -178,26 +178,26 @@ describe("/api/games", () => {
       let res = await exec("like/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.likecount).toBe(1);
+      expect(res.body.likecount).toBe(1);
 
       res = await exec("unlike/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.likecount).toBe(0);
+      expect(res.body.likecount).toBe(0);
     });
 
     it("should dislike the game if it is valid", async () => {
       const res = await exec("dislike/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.dislikecount).toBe(1);
+      expect(res.body.dislikecount).toBe(1);
     });
 
     it("should return 400 if user already disliked the game", async () => {
       let res = await exec("dislike/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.dislikecount).toBe(1);
+      expect(res.body.dislikecount).toBe(1);
 
       res = await exec("dislike/");
 
@@ -208,12 +208,12 @@ describe("/api/games", () => {
       let res = await exec("dislike/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.dislikecount).toBe(1);
+      expect(res.body.dislikecount).toBe(1);
 
       res = await exec("undislike/");
 
       expect(res.status).toBe(200);
-      expect(res.body.rating.dislikecount).toBe(0);
+      expect(res.body.dislikecount).toBe(0);
     });
   });
 

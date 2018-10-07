@@ -10,30 +10,34 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
+const _ = require("lodash");
 
 // Create a game
-router.post(
-  "/",
-  [auth, admin, upload.single("gameImage")],
-  async (req, res) => {
-    const { error } = validateGame(req.body);
-    if (error) {
-      return res.status(400).send(error.details[0].message);
-    }
-
-    gameExists = await Game.findOne({ name: req.body.name });
-
-    if (gameExists) {
-      res.status(400).send(`${req.body.name} already exists!`);
-    } else {
-      let game = updateGame(new Game({}), req.body, req.file);
-
-      game = await game.save();
-
-      res.send(game);
-    }
+router.post("/", [auth, admin, upload.single("image")], async (req, res) => {
+  if (req.body.released) {
+    req.body.released = Boolean(Number(req.body.released));
   }
-);
+  if (req.body.image !== undefined) {
+    req.body.image.data = Buffer.from(req.body.image.data);
+  }
+
+  const { error } = validateGame(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  gameExists = await Game.findOne({ name: req.body.name });
+
+  if (gameExists) {
+    res.status(400).send(`${req.body.name} already exists!`);
+  } else {
+    let game = updateGame(new Game({}), req.body, req.file);
+
+    game = await game.save();
+
+    res.send(game);
+  }
+});
 
 // Read all games
 router.get("/", cache(30), async (req, res) => {
@@ -53,14 +57,28 @@ router.get("/:id", [validateObjectId, cache(30)], async (req, res) => {
 // Update a game
 router.put(
   "/:id",
-  [auth, admin, validateObjectId, upload.single("gameImage")],
+  [auth, admin, validateObjectId, upload.single("image")],
   async (req, res) => {
+    if (req.body.released) {
+      req.body.released = Boolean(Number(req.body.released));
+    }
+    if (req.body.image !== undefined) {
+      req.body.image.data = Buffer.from(req.body.image.data);
+    }
+
     const { error } = validateGame(req.body);
     if (error) {
       return res.status(400).send(error.details[0].message);
     }
     Game.findById(req.params.id, (err, game) => {
-      game = updateGame(game, req.body, req.file);
+      if (req.body.image !== undefined) {
+        game = updateGame(game, req.body);
+      }
+
+      if (req.file !== undefined) {
+        game = updateGame(game, req.body, req.file);
+      }
+
       game.save((e, updatedGame) => {
         if (err) {
           res.status(400).send(e);
@@ -73,14 +91,15 @@ router.put(
 );
 
 // Comment on a game
-router.put("/comment/:id", [auth, validateObjectId], async (req, res) => {
-  const { error } = validateGame(req.body);
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
+router.put("/comment/:id", validateObjectId, async (req, res) => {
+  // const { error } = validateGame(req.body);
+  // if (error) {
+  //   return res.status(400).send(error.details[0].message);
+  // }
 
   Game.findById(req.params.id, (err, game) => {
-    const comment = { name: req.user.name, text: req.body };
+    const comment = { name: req.body.name, text: req.body.text };
+
     if (req.body !== undefined) {
       game.comments.push(comment);
     }
@@ -88,7 +107,7 @@ router.put("/comment/:id", [auth, validateObjectId], async (req, res) => {
       if (err) {
         res.status(400).send(e);
       } else {
-        res.send(updatedGame);
+        res.send(updatedGame.comments);
       }
     });
   });
@@ -103,7 +122,7 @@ router.put("/like/:id", [auth, validateObjectId], async (req, res) => {
         if (err) {
           res.status(400).send(e);
         } else {
-          res.send(updatedGame);
+          res.send(updatedGame.rating);
         }
       });
     } else {
@@ -121,7 +140,7 @@ router.put("/unlike/:id", [auth, validateObjectId], async (req, res) => {
         if (err) {
           res.status(400).send(e);
         } else {
-          res.send(updatedGame);
+          res.send(updatedGame.rating);
         }
       });
     } else {
@@ -139,11 +158,11 @@ router.put("/dislike/:id", [auth, validateObjectId], async (req, res) => {
         if (err) {
           res.status(400).send(e);
         } else {
-          res.send(updatedGame);
+          res.send(updatedGame.rating);
         }
       });
     } else {
-      res.status(400).send("User already liked the game.");
+      res.status(400).send("User already disliked the game.");
     }
   });
 });
@@ -157,7 +176,7 @@ router.put("/undislike/:id", [auth, validateObjectId], async (req, res) => {
         if (err) {
           res.status(400).send(e);
         } else {
-          res.send(updatedGame);
+          res.send(updatedGame.rating);
         }
       });
     } else {
@@ -178,14 +197,9 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
 });
 
 // Remove comment from game
-router.delete("/comment/:id", [auth, validateObjectId], async (req, res) => {
-  const { error } = validateGame(req.body);
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
-
+router.delete("/comment/:id", validateObjectId, async (req, res) => {
   Game.findById(req.params.id, (err, game) => {
-    const comment = { name: req.user.name, text: req.body };
+    const comment = { name: req.body.name, text: req.body.text };
     const index = game.comments.indexOf(comment);
     if (req.body !== undefined) {
       game.comments.splice(index, 1);
@@ -194,7 +208,7 @@ router.delete("/comment/:id", [auth, validateObjectId], async (req, res) => {
       if (err) {
         res.status(400).send(e);
       } else {
-        res.send(updatedGame);
+        res.send(updatedGame.comments);
       }
     });
   });
@@ -248,7 +262,7 @@ function undislikeGame(game, user) {
   }
 }
 
-function updateGame(game, reqBody, reqFile) {
+function updateGame(game, reqBody = undefined, reqFile = undefined) {
   if (reqBody.name !== undefined) {
     game.name = reqBody.name;
   }
@@ -275,6 +289,14 @@ function updateGame(game, reqBody, reqFile) {
   }
   if (reqBody.price !== undefined) {
     game.price = reqBody.price;
+  }
+  if (reqBody.image !== undefined) {
+    if (reqBody.image.data !== undefined) {
+      game.image.data = reqBody.image.data;
+    }
+    if (reqBody.image.contentType !== undefined) {
+      game.image.contentType = reqBody.image.contentType;
+    }
   }
   if (reqFile !== undefined) {
     if (reqFile.buffer !== undefined) {

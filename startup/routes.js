@@ -12,8 +12,8 @@ const users = require("../routes/users");
 const auth = require("../routes/auth");
 
 module.exports = function(app) {
-  app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }, { limit: "16mb" }));
+  app.use(bodyParser.json({ limit: "16mb" }));
   app.use("/api/games", games);
   app.use("/api/users", users);
   app.use("/api/auth", auth);

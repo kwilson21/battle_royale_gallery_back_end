@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
-const Joi = require("joi");
+const BaseJoi = require("joi");
+const ImageExtension = require("joi-image-extension");
+
+const Joi = BaseJoi.extend(ImageExtension);
 
 // const games = [
 //   {
@@ -39,7 +42,7 @@ const gameSchema = new mongoose.Schema({
   description: {
     type: String,
     minlength: 5,
-    maxlength: 750
+    maxlength: 2500
   },
   genre: {
     perspective: [
@@ -144,7 +147,9 @@ function validateGame(game) {
       .max(50),
     description: Joi.string()
       .min(5)
-      .max(750),
+      .max(2500)
+      .allow("")
+      .allow(null),
     genre: {
       perspective: Joi.array().items(
         Joi.string()
@@ -171,7 +176,17 @@ function validateGame(game) {
     ),
     price: Joi.number()
       .min(0)
-      .max(999)
+      .max(999),
+    image: Joi.object().keys({
+      data: Joi.image()
+        .maxDimensions(1000, 1000)
+        .allowTypes(["png", "jpg"])
+        .allow(null),
+      contentType: Joi.string()
+        .max(20)
+        .allow("")
+        .allow(null)
+    })
   };
 
   return Joi.validate(game, schema);
